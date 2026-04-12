@@ -1,0 +1,37 @@
+# Xcode — 个人本机数据，勿提交
+xcuserdata/
+*.xcuserstate
+*.xcuserdatad/
+
+# Swift Package Manager（构建缓存；Package.resolved 建议保留在仓库里以锁定版本）
+.build/
+.swiftpm/
+
+# 编译产物
+build/
+DerivedData/
+*.ipa
+*.dSYM.zip
+*.dSYM
+
+# CocoaPods（若以后使用）
+Pods/
+
+# Carthage（若以后使用）
+Carthage/Build/
+
+# fastlane
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots/**/*.png
+fastlane/test_output
+
+# 系统与编辑器
+.DS_Store
+*.swp
+*~
+
+# 环境密钥（勿把 API Key 等提交进仓库）
+.env
+.env.*
+!.env.example
