@@ -11,20 +11,25 @@ struct TripsListView: View {
     @State private var summaryURL: URL?
     @State private var showShareSummary = false
 
+    private var monthSections: [MonthSection] {
+        MonthSection.group(trips)
+    }
+
     var body: some View {
         List {
-            Section {
-                Button {
-                    exportAllSummary()
-                } label: {
-                    Label("导出全部摘要 CSV", systemImage: "square.and.arrow.up")
-                }
-                .disabled(trips.isEmpty)
-            }
-
-            ForEach(trips) { trip in
-                NavigationLink(value: trip) {
-                    TripRowView(trip: trip)
+            ForEach(monthSections) { section in
+                Section {
+                    ForEach(section.trips) { trip in
+                        NavigationLink(value: trip) {
+                            TripRowView(trip: trip)
+                        }
+                    }
+                } header: {
+                    MonthSectionHeader(title: MonthSectionFormatting.monthTitle(year: section.year, month: section.month))
+                } footer: {
+                    Text(MonthSectionFormatting.footerText(for: section))
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
                 }
             }
         }
@@ -32,6 +37,20 @@ struct TripsListView: View {
         .navigationBarTitleDisplayMode(.large)
         .navigationDestination(for: Trip.self) { trip in
             TripDetailView(trip: trip)
+        }
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Menu {
+                    Button {
+                        exportAllSummary()
+                    } label: {
+                        Label("导出全部摘要 CSV", systemImage: "square.and.arrow.up")
+                    }
+                } label: {
+                    Image(systemName: "square.and.arrow.up")
+                }
+                .disabled(trips.isEmpty)
+            }
         }
         .sheet(isPresented: $showShareSummary) {
             if let summaryURL {
@@ -55,16 +74,33 @@ struct TripsListView: View {
     }
 }
 
+private struct MonthSectionHeader: View {
+    let title: String
+
+    var body: some View {
+        Text(title)
+            .font(.title2.weight(.bold))
+            .textCase(nil)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.top, 4)
+    }
+}
+
 private struct TripRowView: View {
     let trip: Trip
 
+    private var endpoints: (startLat: Double?, startLon: Double?, endLat: Double?, endLon: Double?) {
+        trip.resolvedEndpointLatLon()
+    }
+
     var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            HStack {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack(alignment: .firstTextBaseline) {
                 Text(trip.startedAt.formatted(date: .abbreviated, time: .shortened))
+                    .font(.subheadline)
                 if trip.endedAt == nil {
                     Text("进行中")
-                        .font(.caption)
+                        .font(.caption2.weight(.medium))
                         .padding(.horizontal, 8)
                         .padding(.vertical, 2)
                         .background(.quaternary, in: Capsule())
@@ -72,6 +108,15 @@ private struct TripRowView: View {
             }
             Text(String(format: "%.2f 公里", trip.totalDistanceMeters / 1000))
                 .font(.headline)
+            if let ended = trip.endedAt {
+                Text("结束 \(ended.formatted(date: .abbreviated, time: .shortened))")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+            let ep = endpoints
+            AsyncAddressCaption(prefix: "起点", latitude: ep.startLat, longitude: ep.startLon)
+            AsyncAddressCaption(prefix: "终点", latitude: ep.endLat, longitude: ep.endLon)
         }
+        .padding(.vertical, 2)
     }
 }

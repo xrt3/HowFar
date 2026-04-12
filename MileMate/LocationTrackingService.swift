@@ -48,11 +48,41 @@ final class LocationTrackingService: NSObject, ObservableObject {
         manager.requestAlwaysAuthorization()
     }
 
+    /// 将地图相机切回跟随当前位置（替代系统地图控件里的定位按钮）。
+    func recenterMapOnUserLocation() {
+        mapPosition = .userLocation(fallback: .automatic)
+    }
+
+    /// `allowsBackgroundLocationUpdates` 仅在 Info.plist 的 `UIBackgroundModes` 含 `location` 且进程可被 Core Location 视为可后台时才能为 `true`，否则会触发 `NSInternalInconsistencyException`。模拟器常不满足后者，故在模拟器上保持关闭。
+    private static var hasDeclaredBackgroundLocationMode: Bool {
+        guard let raw = Bundle.main.object(forInfoDictionaryKey: "UIBackgroundModes") else { return false }
+        if let modes = raw as? [String] {
+            return modes.contains("location")
+        }
+        if let modes = raw as? [Any] {
+            return modes.contains { ($0 as? String) == "location" }
+        }
+        if let single = raw as? String {
+            return single == "location"
+        }
+        return false
+    }
+
+    private func shouldEnableBackgroundLocationUpdates(isAlwaysAuthorized: Bool) -> Bool {
+        guard isAlwaysAuthorized else { return false }
+        #if targetEnvironment(simulator)
+        return false
+        #else
+        return Self.hasDeclaredBackgroundLocationMode
+        #endif
+    }
+
     private func applyBackgroundUpdatesIfAllowed() {
         let status = manager.authorizationStatus
         let always = status == .authorizedAlways
-        manager.allowsBackgroundLocationUpdates = always
-        manager.showsBackgroundLocationIndicator = always
+        let enable = shouldEnableBackgroundLocationUpdates(isAlwaysAuthorized: always)
+        manager.allowsBackgroundLocationUpdates = enable
+        manager.showsBackgroundLocationIndicator = enable
     }
 
     /// 恢复未结束的行程（App 重启后）
@@ -70,12 +100,21 @@ final class LocationTrackingService: NSObject, ObservableObject {
         routeCoordinates = trip.points
             .sorted { $0.timestamp < $1.timestamp }
             .map { CLLocationCoordinate2D(latitude: $0.latitude, longitude: $0.longitude) }
+        if let first = routeCoordinates.first {
+            if trip.startLatitude == nil {
+                trip.startLatitude = first.latitude
+                trip.startLongitude = first.longitude
+            }
+        }
         if let lastCoord = routeCoordinates.last {
+            trip.endLatitude = lastCoord.latitude
+            trip.endLongitude = lastCoord.longitude
             lastRecordedLocation = CLLocation(
                 latitude: lastCoord.latitude,
                 longitude: lastCoord.longitude
             )
         }
+        try? modelContext.save()
         applyBackgroundUpdatesIfAllowed()
         manager.startUpdatingLocation()
     }
@@ -133,6 +172,12 @@ final class LocationTrackingService: NSObject, ObservableObject {
         )
         modelContext.insert(point)
         trip.totalDistanceMeters = totalDistanceMeters
+        if trip.startLatitude == nil {
+            trip.startLatitude = coord.latitude
+            trip.startLongitude = coord.longitude
+        }
+        trip.endLatitude = coord.latitude
+        trip.endLongitude = coord.longitude
         try? modelContext.save()
 
         mapPosition = .region(
@@ -147,8 +192,14 @@ final class LocationTrackingService: NSObject, ObservableObject {
 extension LocationTrackingService: CLLocationManagerDelegate {
     nonisolated func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
         Task { @MainActor in
+            let previous = self.authorizationStatus
             self.authorizationStatus = manager.authorizationStatus
             self.applyBackgroundUpdatesIfAllowed()
+            if previous == .notDetermined,
+               manager.authorizationStatus == .authorizedWhenInUse || manager.authorizationStatus == .authorizedAlways
+            {
+                MainlandLocalNetworkPermission.requestAfterFirstLocationGrantIfNeeded()
+            }
         }
     }
 

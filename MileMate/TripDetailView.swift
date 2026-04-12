@@ -22,42 +22,14 @@ struct TripDetailView: View {
             .map { CLLocationCoordinate2D(latitude: $0.latitude, longitude: $0.longitude) }
     }
 
+    private var endpointCoords: (startLat: Double?, startLon: Double?, endLat: Double?, endLon: Double?) {
+        trip.resolvedEndpointLatLon()
+    }
+
     var body: some View {
-        List {
-            Section("摘要") {
-                LabeledContent("开始") {
-                    Text(trip.startedAt.formatted(date: .abbreviated, time: .shortened))
-                }
-                if let ended = trip.endedAt {
-                    LabeledContent("结束") {
-                        Text(ended.formatted(date: .abbreviated, time: .shortened))
-                    }
-                }
-                LabeledContent("里程") {
-                    Text(String(format: "%.2f 公里", trip.totalDistanceMeters / 1000))
-                }
-                if let note = trip.note, !note.isEmpty {
-                    LabeledContent("备注") {
-                        Text(note)
-                    }
-                }
-            }
-
-            Section {
-                Button {
-                    shareSingleSummary()
-                } label: {
-                    Label("导出本条摘要 CSV", systemImage: "doc.text")
-                }
-                Button {
-                    shareTrack()
-                } label: {
-                    Label("导出轨迹点 CSV", systemImage: "map")
-                }
-                .disabled(coordinates.isEmpty)
-            }
-
-            Section("地图") {
+        GeometryReader { geo in
+            let mapHeight = min(max(geo.size.height * 0.5, 260), 420)
+            VStack(spacing: 0) {
                 Map(position: $camera) {
                     if coordinates.count >= 2 {
                         MapPolyline(coordinates: coordinates)
@@ -67,15 +39,74 @@ struct TripDetailView: View {
                     }
                 }
                 .mapStyle(.standard)
-                .frame(height: 220)
-                .clipShape(RoundedRectangle(cornerRadius: 12))
-                .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
+                .frame(height: mapHeight)
+                .clipShape(RoundedRectangle(cornerRadius: 0))
+                .onAppear { fitMap() }
+                .onChange(of: coordinates.count) { _, _ in fitMap() }
+
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 20) {
+                        detailCard(title: "行程信息") {
+                            GeocodedAddressLine(
+                                label: "起点",
+                                latitude: endpointCoords.startLat,
+                                longitude: endpointCoords.startLon
+                            )
+                            GeocodedAddressLine(
+                                label: "终点",
+                                latitude: endpointCoords.endLat,
+                                longitude: endpointCoords.endLon
+                            )
+                            LabeledContent("里程") {
+                                Text(String(format: "%.2f 公里", trip.totalDistanceMeters / 1000))
+                            }
+                            LabeledContent("开始时间") {
+                                Text(trip.startedAt.formatted(date: .abbreviated, time: .shortened))
+                            }
+                            if let ended = trip.endedAt {
+                                LabeledContent("结束时间") {
+                                    Text(ended.formatted(date: .abbreviated, time: .shortened))
+                                }
+                            } else {
+                                LabeledContent("状态") {
+                                    Text("进行中")
+                                        .foregroundStyle(.secondary)
+                                }
+                            }
+                            if let note = trip.note, !note.isEmpty {
+                                LabeledContent("备注") {
+                                    Text(note)
+                                }
+                            }
+                        }
+                    }
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 20)
+                }
+                .frame(maxWidth: .infinity)
+                .background(.quaternary.opacity(0.35))
             }
         }
         .navigationTitle("行程详情")
         .navigationBarTitleDisplayMode(.inline)
-        .onAppear {
-            fitMap()
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Menu {
+                    Button {
+                        shareSingleSummary()
+                    } label: {
+                        Label("导出本条摘要 CSV", systemImage: "doc.text")
+                    }
+                    Button {
+                        shareTrack()
+                    } label: {
+                        Label("导出轨迹点 CSV", systemImage: "map")
+                    }
+                    .disabled(coordinates.isEmpty)
+                } label: {
+                    Image(systemName: "square.and.arrow.up")
+                }
+            }
         }
         .sheet(isPresented: $showShareSummary) {
             if let shareURL {
@@ -85,6 +116,24 @@ struct TripDetailView: View {
         .sheet(isPresented: $showShareTrack) {
             if let shareTrackURL {
                 ActivityView(activityItems: [shareTrackURL])
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func detailCard(title: String, @ViewBuilder content: () -> some View) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text(title)
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(.secondary)
+            VStack(alignment: .leading, spacing: 12) {
+                content()
+            }
+            .padding(16)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background {
+                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    .fill(.background)
             }
         }
     }

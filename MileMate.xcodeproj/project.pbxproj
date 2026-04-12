@@ -10,9 +10,22 @@
 		EA8499C42F8BECDC00FDCDAE /* MileMate.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MileMate.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		EA8499D22F8BECDC00FDCDAE /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = EA8499C32F8BECDC00FDCDAE /* MileMate */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		EA8499C62F8BECDC00FDCDAE /* MileMate */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				EA8499D22F8BECDC00FDCDAE /* PBXFileSystemSynchronizedBuildFileExceptionSet */,
+			);
 			path = MileMate;
 			sourceTree = "<group>";
 		};
@@ -251,13 +264,16 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 26WWUJXH9Z;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = MileMate/Info.plist;
+				INFOPLIST_KEY_NSBonjourServices = _http._tcp;
+				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "用于在本地网络环境下发现并连接相关服务，以便在中国大陆网络条件下更稳定地使用地图与行程记录。";
 				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "在后台持续记录驾车轨迹与里程，便于报销；锁屏或切换其他应用时仍需定位权限。";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "在地图上显示当前位置，并记录行车轨迹与里程以便报销。";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
-				INFOPLIST_KEY_UIBackgroundModes = location;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
@@ -285,13 +301,16 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 26WWUJXH9Z;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = MileMate/Info.plist;
+				INFOPLIST_KEY_NSBonjourServices = _http._tcp;
+				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "用于在本地网络环境下发现并连接相关服务，以便在中国大陆网络条件下更稳定地使用地图与行程记录。";
 				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "在后台持续记录驾车轨迹与里程，便于报销；锁屏或切换其他应用时仍需定位权限。";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "在地图上显示当前位置，并记录行车轨迹与里程以便报销。";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
-				INFOPLIST_KEY_UIBackgroundModes = location;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";

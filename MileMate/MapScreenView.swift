@@ -27,7 +27,6 @@ struct MapScreenView: View {
             }
             .mapStyle(.standard(elevation: .realistic))
             .mapControls {
-                MapUserLocationButton()
                 MapCompass()
             }
 
@@ -45,6 +44,10 @@ struct MapScreenView: View {
             NavigationStack {
                 TripsListView()
             }
+            .presentationDetents([.medium, .large])
+            .presentationDragIndicator(.visible)
+            .presentationBackground(.ultraThinMaterial)
+            .presentationCornerRadius(24)
         }
         .alert("需要定位权限", isPresented: $showLocationDeniedAlert) {
             Button("去设置") {
@@ -88,6 +91,16 @@ struct MapScreenView: View {
                 .buttonStyle(.plain)
                 .glassEffect(.regular.interactive(), in: Circle())
 
+                Button {
+                    handleRecenterTap()
+                } label: {
+                    Image(systemName: "location.north.line.fill")
+                        .font(.title2)
+                        .frame(width: 52, height: 52)
+                }
+                .buttonStyle(.plain)
+                .glassEffect(.regular.interactive(), in: Circle())
+
                 if locationService.isRecording {
                     Button(role: .destructive) {
                         locationService.endTrip()
@@ -112,6 +125,17 @@ struct MapScreenView: View {
             }
             .padding(.horizontal, 14)
             .padding(.vertical, 12)
+        }
+    }
+
+    private func handleRecenterTap() {
+        switch locationService.authorizationStatus {
+        case .denied, .restricted:
+            showLocationDeniedAlert = true
+        case .notDetermined:
+            locationService.requestWhenInUse()
+        default:
+            locationService.recenterMapOnUserLocation()
         }
     }
 
