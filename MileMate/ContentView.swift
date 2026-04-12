@@ -5,20 +5,22 @@
 //  Created by BigTong on 2026/4/12.
 //
 
+import SwiftData
 import SwiftUI
 
 struct ContentView: View {
+    @StateObject private var locationService = LocationTrackingService()
+
     var body: some View {
-        VStack {
-            Image(systemName: "globe")
-                .imageScale(.large)
-                .foregroundStyle(.tint)
-            Text("Hello, world!")
+        NavigationStack {
+            MapScreenView()
+                .toolbar(.hidden, for: .navigationBar)
         }
-        .padding()
+        .environmentObject(locationService)
     }
 }
 
 #Preview {
     ContentView()
+        .modelContainer(for: [Trip.self, TripPoint.self], inMemory: true)
 }
