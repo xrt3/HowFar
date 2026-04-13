@@ -6,12 +6,41 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		EA84EMBF22F8BECDC00FDCDAE /* MileMateWidgets.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = EA84WAPP22F8BECDC00FDCDAE /* MileMateWidgets.appex */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		EA84PROY22F8BECDC00FDCDAE /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = EA8499BC2F8BECDC00FDCDAE /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = EA84WTGT22F8BECDC00FDCDAE;
+			remoteInfo = MileMateWidgets;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		EA84EMBD22F8BECDC00FDCDAE /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				EA84EMBF22F8BECDC00FDCDAE /* MileMateWidgets.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
 		EA8499C42F8BECDC00FDCDAE /* MileMate.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MileMate.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		EA84WAPP22F8BECDC00FDCDAE /* MileMateWidgets.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = MileMateWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		EA8499D22F8BECDC00FDCDAE /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
+		EA8499D22F8BECDC00FDCDAE /* Exceptions for "MileMate" folder in "MileMate" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
@@ -24,15 +53,27 @@
 		EA8499C62F8BECDC00FDCDAE /* MileMate */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
-				EA8499D22F8BECDC00FDCDAE /* PBXFileSystemSynchronizedBuildFileExceptionSet */,
+				EA8499D22F8BECDC00FDCDAE /* Exceptions for "MileMate" folder in "MileMate" target */,
 			);
 			path = MileMate;
+			sourceTree = "<group>";
+		};
+		EA84WGRP22F8BECDC00FDCDAE /* MileMateWidgets */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = MileMateWidgets;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		EA8499C12F8BECDC00FDCDAE /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		EA84WFRP22F8BECDC00FDCDAE /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -46,6 +87,7 @@
 			isa = PBXGroup;
 			children = (
 				EA8499C62F8BECDC00FDCDAE /* MileMate */,
+				EA84WGRP22F8BECDC00FDCDAE /* MileMateWidgets */,
 				EA8499C52F8BECDC00FDCDAE /* Products */,
 			);
 			sourceTree = "<group>";
@@ -54,6 +96,7 @@
 			isa = PBXGroup;
 			children = (
 				EA8499C42F8BECDC00FDCDAE /* MileMate.app */,
+				EA84WAPP22F8BECDC00FDCDAE /* MileMateWidgets.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -68,20 +111,46 @@
 				EA8499C02F8BECDC00FDCDAE /* Sources */,
 				EA8499C12F8BECDC00FDCDAE /* Frameworks */,
 				EA8499C22F8BECDC00FDCDAE /* Resources */,
+				EA84EMBD22F8BECDC00FDCDAE /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				EA84DEPT22F8BECDC00FDCDAE /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				EA8499C62F8BECDC00FDCDAE /* MileMate */,
 			);
 			name = MileMate;
 			packageProductDependencies = (
+				EA84PROD02F8BECDC00FDCDAE /* MileMateLiveActivityAttributes */,
 			);
 			productName = MileMate;
 			productReference = EA8499C42F8BECDC00FDCDAE /* MileMate.app */;
 			productType = "com.apple.product-type.application";
+		};
+		EA84WTGT22F8BECDC00FDCDAE /* MileMateWidgets */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = EA84WBLI22F8BECDC00FDCDAE /* Build configuration list for PBXNativeTarget "MileMateWidgets" */;
+			buildPhases = (
+				EA84WSHP22F8BECDC00FDCDAE /* Sources */,
+				EA84WFRP22F8BECDC00FDCDAE /* Frameworks */,
+				EA84WRBP22F8BECDC00FDCDAE /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				EA84WGRP22F8BECDC00FDCDAE /* MileMateWidgets */,
+			);
+			name = MileMateWidgets;
+			packageProductDependencies = (
+				EA84PROD02F8BECDC00FDCDAE /* MileMateLiveActivityAttributes */,
+			);
+			productName = MileMateWidgets;
+			productReference = EA84WAPP22F8BECDC00FDCDAE /* MileMateWidgets.appex */;
+			productType = "com.apple.product-type.app-extension";
 		};
 /* End PBXNativeTarget section */
 
@@ -96,6 +165,9 @@
 					EA8499C32F8BECDC00FDCDAE = {
 						CreatedOnToolsVersion = 26.4;
 					};
+					EA84WTGT22F8BECDC00FDCDAE = {
+						CreatedOnToolsVersion = 26.4;
+					};
 				};
 			};
 			buildConfigurationList = EA8499BF2F8BECDC00FDCDAE /* Build configuration list for PBXProject "MileMate" */;
@@ -107,18 +179,37 @@
 			);
 			mainGroup = EA8499BB2F8BECDC00FDCDAE;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				EA84PKG002F8BECDC00FDCDAE /* XCLocalSwiftPackageReference "MileMateLiveActivityAttributes" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = EA8499C52F8BECDC00FDCDAE /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
 				EA8499C32F8BECDC00FDCDAE /* MileMate */,
+				EA84WTGT22F8BECDC00FDCDAE /* MileMateWidgets */,
 			);
 		};
 /* End PBXProject section */
 
+/* Begin PBXTargetDependency section */
+		EA84DEPT22F8BECDC00FDCDAE /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = EA84WTGT22F8BECDC00FDCDAE /* MileMateWidgets */;
+			targetProxy = EA84PROY22F8BECDC00FDCDAE /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
 /* Begin PBXResourcesBuildPhase section */
 		EA8499C22F8BECDC00FDCDAE /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		EA84WRBP22F8BECDC00FDCDAE /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -129,6 +220,13 @@
 
 /* Begin PBXSourcesBuildPhase section */
 		EA8499C02F8BECDC00FDCDAE /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		EA84WSHP22F8BECDC00FDCDAE /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -190,7 +288,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 26.4;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
@@ -247,7 +345,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 26.4;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
@@ -272,6 +370,7 @@
 				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "用于在本地网络环境下发现并连接相关服务，以便在中国大陆网络条件下更稳定地使用地图与行程记录。";
 				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "在后台持续记录驾车轨迹与里程，便于报销；锁屏或切换其他应用时仍需定位权限。";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "在地图上显示当前位置，并记录行车轨迹与里程以便报销。";
+				INFOPLIST_KEY_NSSupportsLiveActivities = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -309,6 +408,7 @@
 				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "用于在本地网络环境下发现并连接相关服务，以便在中国大陆网络条件下更稳定地使用地图与行程记录。";
 				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "在后台持续记录驾车轨迹与里程，便于报销；锁屏或切换其他应用时仍需定位权限。";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "在地图上显示当前位置，并记录行车轨迹与里程以便报销。";
+				INFOPLIST_KEY_NSSupportsLiveActivities = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -321,6 +421,64 @@
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = RuitongFuture.MileMate;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		EA84WDEB22F8BECDC00FDCDAE /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 26WWUJXH9Z;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = MileMate;
+				INFOPLIST_KEY_NSExtension_NSExtensionPointIdentifier = "com.apple.widgetkit-extension";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = RuitongFuture.MileMate.MileMateWidgets;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		EA84WREL22F8BECDC00FDCDAE /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 26WWUJXH9Z;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = MileMate;
+				INFOPLIST_KEY_NSExtension_NSExtensionPointIdentifier = "com.apple.widgetkit-extension";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = RuitongFuture.MileMate.MileMateWidgets;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
@@ -352,7 +510,31 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
+		EA84WBLI22F8BECDC00FDCDAE /* Build configuration list for PBXNativeTarget "MileMateWidgets" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				EA84WDEB22F8BECDC00FDCDAE /* Debug */,
+				EA84WREL22F8BECDC00FDCDAE /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 /* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		EA84PKG002F8BECDC00FDCDAE /* XCLocalSwiftPackageReference "MileMateLiveActivityAttributes" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = MileMateLiveActivityAttributes;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		EA84PROD02F8BECDC00FDCDAE /* MileMateLiveActivityAttributes */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = EA84PKG002F8BECDC00FDCDAE /* XCLocalSwiftPackageReference "MileMateLiveActivityAttributes" */;
+			productName = MileMateLiveActivityAttributes;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = EA8499BC2F8BECDC00FDCDAE /* Project object */;
 }

@@ -8,6 +8,29 @@ import Foundation
 import MapKit
 import SwiftUI
 
+// MARK: - 分享临时文件（sheet(item:)）
+
+struct ShareableTemporaryFile: Identifiable {
+    let id = UUID()
+    let url: URL
+}
+
+// MARK: - 列表/详情中文日期时间（固定 zh_CN）
+
+enum TripDisplayDateFormatting {
+    private static let listFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.locale = Locale(identifier: "zh_CN")
+        f.dateStyle = .medium
+        f.timeStyle = .short
+        return f
+    }()
+
+    static func listString(_ date: Date) -> String {
+        listFormatter.string(from: date)
+    }
+}
+
 // MARK: - Trip 首尾坐标
 
 extension Trip {
@@ -110,7 +133,7 @@ enum MonthSectionFormatting {
         return titleFormatter.string(from: date)
     }
 
-    static func footerText(for section: MonthSection) -> String {
+    static func monthSubtitle(for section: MonthSection) -> String {
         var parts: [String] = [
             "\(section.tripCount) 次行程",
             String(format: "%.2f 公里", section.totalDistanceKm),
@@ -134,6 +157,43 @@ enum MonthSectionFormatting {
             return "约 \(m) 分钟"
         }
         return "不足 1 分钟"
+    }
+}
+
+// MARK: - 列表行内容
+
+struct TripListRowView: View {
+    let trip: Trip
+
+    private var endpoints: (startLat: Double?, startLon: Double?, endLat: Double?, endLon: Double?) {
+        trip.resolvedEndpointLatLon()
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack(alignment: .firstTextBaseline) {
+                Text(TripDisplayDateFormatting.listString(trip.startedAt))
+                    .font(.subheadline)
+                if trip.endedAt == nil {
+                    Text("进行中")
+                        .font(.caption2.weight(.medium))
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 2)
+                        .background(.quaternary, in: Capsule())
+                }
+            }
+            Text(String(format: "%.2f 公里", trip.totalDistanceMeters / 1000))
+                .font(.headline)
+            if let ended = trip.endedAt {
+                Text("结束 \(TripDisplayDateFormatting.listString(ended))")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+            let ep = endpoints
+            AsyncAddressCaption(prefix: "起点", latitude: ep.startLat, longitude: ep.startLon)
+            AsyncAddressCaption(prefix: "终点", latitude: ep.endLat, longitude: ep.endLon)
+        }
+        .padding(.vertical, 2)
     }
 }
 

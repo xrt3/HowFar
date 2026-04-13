@@ -7,6 +7,7 @@ import Combine
 import CoreLocation
 import Foundation
 import MapKit
+import MileMateLiveActivityAttributes
 import SwiftData
 import SwiftUI
 
@@ -14,8 +15,12 @@ import SwiftUI
 final class LocationTrackingService: NSObject, ObservableObject {
     @Published private(set) var authorizationStatus: CLAuthorizationStatus
     @Published private(set) var isRecording = false
+    /// 录制中且已暂停（不采点、不更新定位以省电）；与 `Trip.recordingPausedSince` 同步。
+    @Published private(set) var isRecordingPaused = false
     @Published private(set) var routeCoordinates: [CLLocationCoordinate2D] = []
     @Published private(set) var totalDistanceMeters: Double = 0
+    /// 当前录制中行程的开始时间（用于界面显示已过时间）；非录制时为 `nil`。
+    @Published private(set) var activeTripStartedAt: Date?
     /// 与 `Map(position:)` 双向绑定；用户拖动地图时会写入。
     @Published var mapPosition: MapCameraPosition = .userLocation(fallback: .automatic)
 
@@ -25,6 +30,10 @@ final class LocationTrackingService: NSObject, ObservableObject {
     private let manager = CLLocationManager()
     private var currentTrip: Trip?
     private var lastRecordedLocation: CLLocation?
+    private var cancellables = Set<AnyCancellable>()
+    private var liveActivityHeartbeat: AnyCancellable?
+    /// 非录制时用于省电的移动阈值（米）；录制中改为 `kCLDistanceFilterNone`，否则静止几秒可能收不到任何定位更新、行程无点。
+    private static let idleDistanceFilter: CLLocationDistance = 5
 
     override init() {
         authorizationStatus = manager.authorizationStatus
@@ -32,8 +41,33 @@ final class LocationTrackingService: NSObject, ObservableObject {
         manager.delegate = self
         manager.activityType = .automotiveNavigation
         manager.desiredAccuracy = kCLLocationAccuracyBestForNavigation
-        manager.distanceFilter = 5
+        manager.distanceFilter = Self.idleDistanceFilter
         manager.pausesLocationUpdatesAutomatically = false
+
+        NotificationCenter.default.publisher(for: .mileMatePauseTripRecording)
+            .receive(on: RunLoop.main)
+            .sink { [weak self] _ in
+                self?.pauseRecording()
+            }
+            .store(in: &cancellables)
+
+        NotificationCenter.default.publisher(for: .mileMateResumeTripRecording)
+            .receive(on: RunLoop.main)
+            .sink { [weak self] _ in
+                self?.resumeRecording()
+            }
+            .store(in: &cancellables)
+    }
+
+    /// 有效记录时长（扣除暂停时段），用于界面与 Live Activity。
+    func activeRecordingElapsed(at date: Date) -> TimeInterval {
+        guard let trip = currentTrip, let started = activeTripStartedAt else { return 0 }
+        let wall = date.timeIntervalSince(started)
+        var pauseTotal = trip.totalRecordingPauseSeconds
+        if let since = trip.recordingPausedSince {
+            pauseTotal += date.timeIntervalSince(since)
+        }
+        return max(0, wall - pauseTotal)
     }
 
     func refreshAuthorizationStatus() {
@@ -96,10 +130,12 @@ final class LocationTrackingService: NSObject, ObservableObject {
         guard let trip = try? modelContext.fetch(descriptor).first else { return }
         currentTrip = trip
         isRecording = true
+        isRecordingPaused = trip.recordingPausedSince != nil
         totalDistanceMeters = trip.totalDistanceMeters
+        activeTripStartedAt = trip.startedAt
         routeCoordinates = trip.points
             .sorted { $0.timestamp < $1.timestamp }
-            .map { CLLocationCoordinate2D(latitude: $0.latitude, longitude: $0.longitude) }
+            .map { MapCoordinateAlignment.displayCoordinate(latitude: $0.latitude, longitude: $0.longitude) }
         if let first = routeCoordinates.first {
             if trip.startLatitude == nil {
                 trip.startLatitude = first.latitude
@@ -116,7 +152,23 @@ final class LocationTrackingService: NSObject, ObservableObject {
         }
         try? modelContext.save()
         applyBackgroundUpdatesIfAllowed()
-        manager.startUpdatingLocation()
+        mapPosition = .userLocation(fallback: .automatic)
+        if isRecordingPaused {
+            manager.stopUpdatingLocation()
+            manager.distanceFilter = Self.idleDistanceFilter
+            Task {
+                await TripLiveActivityCoordinator.beginIfPossible(tripId: trip.id, service: self)
+                await TripLiveActivityCoordinator.pushUpdate(from: self, force: true)
+            }
+        } else {
+            manager.distanceFilter = kCLDistanceFilterNone
+            manager.startUpdatingLocation()
+            Task {
+                await TripLiveActivityCoordinator.beginIfPossible(tripId: trip.id, service: self)
+                await TripLiveActivityCoordinator.pushUpdate(from: self, force: true)
+            }
+            startLiveActivityHeartbeat()
+        }
     }
 
     func startTrip() throws {
@@ -128,26 +180,121 @@ final class LocationTrackingService: NSObject, ObservableObject {
         try modelContext.save()
         currentTrip = trip
         isRecording = true
+        isRecordingPaused = false
+        activeTripStartedAt = trip.startedAt
         routeCoordinates = []
         totalDistanceMeters = 0
         lastRecordedLocation = nil
+        manager.distanceFilter = kCLDistanceFilterNone
+        mapPosition = .userLocation(fallback: .automatic)
         manager.startUpdatingLocation()
+        Task {
+            await TripLiveActivityCoordinator.beginIfPossible(tripId: trip.id, service: self)
+            await TripLiveActivityCoordinator.pushUpdate(from: self, force: true)
+        }
+        startLiveActivityHeartbeat()
     }
 
     func endTrip() {
         guard let modelContext else { return }
         guard isRecording, let trip = currentTrip else { return }
+        // 结束前若尚无轨迹点（静止/精度过滤/刚点结束），用当前已知位置写一条快照，避免「行程消失」
+        if trip.points.isEmpty {
+            ingestSnapshotIfNeeded(location: manager.location, trip: trip, modelContext: modelContext)
+        }
         manager.stopUpdatingLocation()
+        manager.distanceFilter = Self.idleDistanceFilter
+        if let since = trip.recordingPausedSince {
+            trip.totalRecordingPauseSeconds += Date().timeIntervalSince(since)
+            trip.recordingPausedSince = nil
+        }
         trip.endedAt = Date()
         trip.totalDistanceMeters = totalDistanceMeters
         currentTrip = nil
         isRecording = false
+        isRecordingPaused = false
+        activeTripStartedAt = nil
         lastRecordedLocation = nil
         mapPosition = .userLocation(fallback: .automatic)
+        stopLiveActivityHeartbeat()
+        try? modelContext.save()
+        Task {
+            await TripLiveActivityCoordinator.endIfNeeded()
+        }
+    }
+
+    func pauseRecording() {
+        guard let modelContext, let trip = currentTrip, isRecording else { return }
+        guard !isRecordingPaused else { return }
+        trip.recordingPausedSince = Date()
+        isRecordingPaused = true
+        try? modelContext.save()
+        manager.stopUpdatingLocation()
+        manager.distanceFilter = Self.idleDistanceFilter
+        stopLiveActivityHeartbeat()
+        Task {
+            await TripLiveActivityCoordinator.pushUpdate(from: self, force: true)
+        }
+    }
+
+    func resumeRecording() {
+        guard let modelContext, let trip = currentTrip, isRecording else { return }
+        guard isRecordingPaused, let since = trip.recordingPausedSince else { return }
+        trip.totalRecordingPauseSeconds += Date().timeIntervalSince(since)
+        trip.recordingPausedSince = nil
+        isRecordingPaused = false
+        try? modelContext.save()
+        applyBackgroundUpdatesIfAllowed()
+        manager.distanceFilter = kCLDistanceFilterNone
+        manager.startUpdatingLocation()
+        startLiveActivityHeartbeat()
+        Task {
+            await TripLiveActivityCoordinator.pushUpdate(from: self, force: true)
+        }
+    }
+
+    private func startLiveActivityHeartbeat() {
+        stopLiveActivityHeartbeat()
+        liveActivityHeartbeat = Timer.publish(every: 4, tolerance: 0.5, on: .main, in: .common)
+            .autoconnect()
+            .sink { [weak self] _ in
+                guard let self else { return }
+                Task {
+                    await TripLiveActivityCoordinator.pushUpdate(from: self, force: false)
+                }
+            }
+    }
+
+    private func stopLiveActivityHeartbeat() {
+        liveActivityHeartbeat?.cancel()
+        liveActivityHeartbeat = nil
+    }
+
+    /// 结束行程时补一条点；精度阈值略放宽，避免室内/首点被拒后整段空白。
+    private func ingestSnapshotIfNeeded(location: CLLocation?, trip: Trip, modelContext: ModelContext) {
+        guard let location, location.horizontalAccuracy > 0, location.horizontalAccuracy <= 200 else { return }
+        let rawCoord = location.coordinate
+        let mapCoord = MapCoordinateAlignment.displayCoordinate(rawCoord)
+        routeCoordinates.append(mapCoord)
+        lastRecordedLocation = location
+        let point = TripPoint(
+            timestamp: location.timestamp,
+            latitude: rawCoord.latitude,
+            longitude: rawCoord.longitude,
+            horizontalAccuracy: location.horizontalAccuracy,
+            trip: trip
+        )
+        modelContext.insert(point)
+        trip.totalDistanceMeters = totalDistanceMeters
+        trip.startLatitude = rawCoord.latitude
+        trip.startLongitude = rawCoord.longitude
+        trip.endLatitude = rawCoord.latitude
+        trip.endLongitude = rawCoord.longitude
         try? modelContext.save()
     }
 
     private func appendLocation(_ location: CLLocation) {
+        guard !isRecordingPaused else { return }
         guard let modelContext, let trip = currentTrip else { return }
         if location.horizontalAccuracy > 80 { return }
         if location.speed >= 0, location.speed < 0.5 {
@@ -160,32 +307,26 @@ final class LocationTrackingService: NSObject, ObservableObject {
         }
         lastRecordedLocation = location
 
-        let coord = location.coordinate
-        routeCoordinates.append(coord)
+        let rawCoord = location.coordinate
+        let mapCoord = MapCoordinateAlignment.displayCoordinate(rawCoord)
+        routeCoordinates.append(mapCoord)
 
         let point = TripPoint(
             timestamp: location.timestamp,
-            latitude: coord.latitude,
-            longitude: coord.longitude,
+            latitude: rawCoord.latitude,
+            longitude: rawCoord.longitude,
             horizontalAccuracy: location.horizontalAccuracy,
             trip: trip
         )
         modelContext.insert(point)
         trip.totalDistanceMeters = totalDistanceMeters
         if trip.startLatitude == nil {
-            trip.startLatitude = coord.latitude
-            trip.startLongitude = coord.longitude
+            trip.startLatitude = rawCoord.latitude
+            trip.startLongitude = rawCoord.longitude
         }
-        trip.endLatitude = coord.latitude
-        trip.endLongitude = coord.longitude
+        trip.endLatitude = rawCoord.latitude
+        trip.endLongitude = rawCoord.longitude
         try? modelContext.save()
-
-        mapPosition = .region(
-            MKCoordinateRegion(
-                center: coord,
-                span: MKCoordinateSpan(latitudeDelta: 0.02, longitudeDelta: 0.02)
-            )
-        )
     }
 }
 
@@ -206,7 +347,7 @@ extension LocationTrackingService: CLLocationManagerDelegate {
     nonisolated func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         guard let loc = locations.last else { return }
         Task { @MainActor in
-            guard self.isRecording else { return }
+            guard self.isRecording, !self.isRecordingPaused else { return }
             self.appendLocation(loc)
         }
     }

@@ -18,6 +18,12 @@ final class Trip {
     var startLongitude: Double?
     var endLatitude: Double?
     var endLongitude: Double?
+    /// 已归档行程不出现在主列表。使用 `Bool?` 以便旧版数据库迁移时该列可为 NULL（`nil`/`false` 均视为未归档）。
+    var isArchived: Bool?
+    /// 已累计的暂停时长（秒），不含当前这一段暂停。
+    var totalRecordingPauseSeconds: Double
+    /// 非 `nil` 表示当前处于暂停中（持久化，便于 App 被杀死后恢复）。
+    var recordingPausedSince: Date?
 
     @Relationship(deleteRule: .cascade, inverse: \TripPoint.trip)
     var points: [TripPoint]
@@ -32,6 +38,9 @@ final class Trip {
         startLongitude: Double? = nil,
         endLatitude: Double? = nil,
         endLongitude: Double? = nil,
+        isArchived: Bool? = nil,
+        totalRecordingPauseSeconds: Double = 0,
+        recordingPausedSince: Date? = nil,
         points: [TripPoint] = []
     ) {
         self.id = id
@@ -43,6 +52,9 @@ final class Trip {
         self.startLongitude = startLongitude
         self.endLatitude = endLatitude
         self.endLongitude = endLongitude
+        self.isArchived = isArchived
+        self.totalRecordingPauseSeconds = totalRecordingPauseSeconds
+        self.recordingPausedSince = recordingPausedSince
         self.points = points
     }
 }

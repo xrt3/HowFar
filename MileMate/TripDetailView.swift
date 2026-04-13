@@ -11,15 +11,12 @@ struct TripDetailView: View {
     @Bindable var trip: Trip
 
     @State private var camera: MapCameraPosition = .automatic
-    @State private var shareURL: URL?
-    @State private var shareTrackURL: URL?
-    @State private var showShareSummary = false
-    @State private var showShareTrack = false
+    @State private var shareFile: ShareableTemporaryFile?
 
     private var coordinates: [CLLocationCoordinate2D] {
         trip.points
             .sorted { $0.timestamp < $1.timestamp }
-            .map { CLLocationCoordinate2D(latitude: $0.latitude, longitude: $0.longitude) }
+            .map { MapCoordinateAlignment.displayCoordinate(latitude: $0.latitude, longitude: $0.longitude) }
     }
 
     private var endpointCoords: (startLat: Double?, startLon: Double?, endLat: Double?, endLon: Double?) {
@@ -61,11 +58,11 @@ struct TripDetailView: View {
                                 Text(String(format: "%.2f 公里", trip.totalDistanceMeters / 1000))
                             }
                             LabeledContent("开始时间") {
-                                Text(trip.startedAt.formatted(date: .abbreviated, time: .shortened))
+                                Text(TripDisplayDateFormatting.listString(trip.startedAt))
                             }
                             if let ended = trip.endedAt {
                                 LabeledContent("结束时间") {
-                                    Text(ended.formatted(date: .abbreviated, time: .shortened))
+                                    Text(TripDisplayDateFormatting.listString(ended))
                                 }
                             } else {
                                 LabeledContent("状态") {
@@ -108,15 +105,8 @@ struct TripDetailView: View {
                 }
             }
         }
-        .sheet(isPresented: $showShareSummary) {
-            if let shareURL {
-                ActivityView(activityItems: [shareURL])
-            }
-        }
-        .sheet(isPresented: $showShareTrack) {
-            if let shareTrackURL {
-                ActivityView(activityItems: [shareTrackURL])
-            }
+        .sheet(item: $shareFile) { item in
+            ActivityView(activityItems: [item.url])
         }
     }
 
@@ -164,16 +154,14 @@ struct TripDetailView: View {
         let data = CSVExport.tripsSummaryCSV(trips: [trip])
         let name = "MileMate-单条行程-\(fileStamp()).csv"
         guard let url = try? CSVExport.writeTemporaryFile(data: data, name: name) else { return }
-        shareURL = url
-        showShareSummary = true
+        shareFile = ShareableTemporaryFile(url: url)
     }
 
     private func shareTrack() {
         let data = CSVExport.tripTrackCSV(trip: trip)
         let name = "MileMate-轨迹-\(fileStamp()).csv"
         guard let url = try? CSVExport.writeTemporaryFile(data: data, name: name) else { return }
-        shareTrackURL = url
-        showShareTrack = true
+        shareFile = ShareableTemporaryFile(url: url)
     }
 
     private func fileStamp() -> String {
