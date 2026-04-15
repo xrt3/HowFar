@@ -9,6 +9,9 @@ import SwiftUI
 import UIKit
 
 struct MapScreenView: View {
+    /// 底栏 idle 状态左右圆形按钮边长；主按钮与之对齐以形成同一视觉行高。
+    private static let mapChromeControlSide: CGFloat = 52
+
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var locationService: LocationTrackingService
 
@@ -74,11 +77,23 @@ struct MapScreenView: View {
 
     @ViewBuilder
     private var bottomBar: some View {
-        if locationService.isRecording {
-            recordingBottomSheet
-        } else {
-            idleBottomBar
+        Group {
+            if locationService.isRecording {
+                recordingBottomSheet
+                    .transition(bottomChromeTransition)
+            } else {
+                idleBottomBar
+                    .transition(bottomChromeTransition)
+            }
         }
+    }
+
+    /// 底栏切换：插入时轻微上移 + 淡入，移除时仅淡出，避免双重大幅位移动画（更贴近系统面板节奏）。
+    private var bottomChromeTransition: AnyTransition {
+        .asymmetric(
+            insertion: .offset(y: 20).combined(with: .opacity),
+            removal: .opacity
+        )
     }
 
     private var idleBottomBar: some View {
@@ -89,7 +104,14 @@ struct MapScreenView: View {
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 12)
-        .background(.regularMaterial, in: Capsule())
+        .background {
+            ZStack {
+                Capsule()
+                    .fill(.ultraThinMaterial)
+                Capsule()
+                    .strokeBorder(Color.primary.opacity(0.1), lineWidth: 0.5)
+            }
+        }
     }
 
     private var recordingBottomSheet: some View {
@@ -189,11 +211,14 @@ struct MapScreenView: View {
         } label: {
             Image(systemName: "list.bullet")
                 .font(.title2)
-                .frame(width: 52, height: 52)
+                .frame(width: Self.mapChromeControlSide, height: Self.mapChromeControlSide)
                 .contentShape(Circle())
         }
         .buttonStyle(.plain)
-        .background(.thinMaterial, in: Circle())
+        .background(chromeCircleFill, in: Circle())
+        .overlay {
+            Circle().strokeBorder(Color.primary.opacity(0.08), lineWidth: 0.5)
+        }
         .contentShape(Circle())
     }
 
@@ -203,12 +228,20 @@ struct MapScreenView: View {
         } label: {
             Image(systemName: "location.circle.fill")
                 .font(.title2)
-                .frame(width: 52, height: 52)
+                .frame(width: Self.mapChromeControlSide, height: Self.mapChromeControlSide)
                 .contentShape(Circle())
         }
         .buttonStyle(.plain)
-        .background(.thinMaterial, in: Circle())
+        .background(chromeCircleFill, in: Circle())
+        .overlay {
+            Circle().strokeBorder(Color.primary.opacity(0.08), lineWidth: 0.5)
+        }
         .contentShape(Circle())
+    }
+
+    /// 与底栏毛玻璃区分的系统填充色（对应 HIG 中 secondary/tertiary system fill 层次）。
+    private var chromeCircleFill: Color {
+        Color(uiColor: .tertiarySystemFill)
     }
 
     private var startTripButton: some View {
@@ -217,12 +250,16 @@ struct MapScreenView: View {
         } label: {
             Label("开始行程", systemImage: "play.fill")
                 .font(.headline)
-                .frame(maxWidth: .infinity, minHeight: 52)
+                .foregroundStyle(Color.white)
+                .frame(maxWidth: .infinity)
+                .frame(height: Self.mapChromeControlSide)
                 .contentShape(Capsule())
         }
         .buttonStyle(.plain)
-        .background(.regularMaterial, in: Capsule())
-        .contentShape(Capsule())
+        .background(Color.accentColor, in: Capsule())
+        .overlay {
+            Capsule().strokeBorder(Color.primary.opacity(0.12), lineWidth: 0.5)
+        }
     }
 
     private var pauseOrResumeButton: some View {

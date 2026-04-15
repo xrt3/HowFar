@@ -14,50 +14,49 @@ struct TripRecordingLiveActivityWidget: Widget {
             TripRecordingLockBannerView(state: context.state)
         } dynamicIsland: { context in
             DynamicIsland {
-                DynamicIslandExpandedRegion(.leading) {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(TripRecordingLiveActivityFormatting.distance(context.state.distanceMeters))
-                            .font(.title3.weight(.semibold))
-                            .monospacedDigit()
-                        Text("里程")
-                            .font(.caption2)
-                            .foregroundStyle(.secondary)
-                    }
-                }
-                DynamicIslandExpandedRegion(.trailing) {
-                    VStack(alignment: .trailing, spacing: 2) {
-                        Text(TripRecordingLiveActivityFormatting.duration(context.state.elapsedSeconds))
-                            .font(.title3.weight(.semibold))
-                            .monospacedDigit()
-                        Text("记录时长")
-                            .font(.caption2)
-                            .foregroundStyle(.secondary)
-                    }
-                }
                 DynamicIslandExpandedRegion(.center) {
-                    Text("轨迹点 \(context.state.pointCount)")
-                        .font(.caption.weight(.medium))
-                        .foregroundStyle(.secondary)
-                }
-                DynamicIslandExpandedRegion(.bottom) {
-                    HStack(spacing: 12) {
-                        if context.state.isPaused {
-                            Button(intent: ResumeTripRecordingIntent()) {
-                                Label("继续", systemImage: "play.fill")
-                                    .font(.headline)
-                                    .frame(maxWidth: .infinity, minHeight: 40)
+                    HStack {
+                        Spacer(minLength: 0)
+                        VStack(spacing: 10) {
+                            HStack(spacing: 14) {
+                                statPill(
+                                    value: TripRecordingLiveActivityFormatting.distance(context.state.distanceMeters),
+                                    caption: "里程"
+                                )
+                                statPill(
+                                    value: TripRecordingLiveActivityFormatting.duration(context.state.elapsedSeconds),
+                                    caption: "记录时长"
+                                )
                             }
-                            .buttonStyle(.borderedProminent)
-                        } else {
-                            Button(intent: PauseTripRecordingIntent()) {
-                                Label("暂停", systemImage: "pause.fill")
-                                    .font(.headline)
-                                    .frame(maxWidth: .infinity, minHeight: 40)
+
+                            Text("轨迹点 \(context.state.pointCount)")
+                                .font(.caption.weight(.medium))
+                                .foregroundStyle(.secondary)
+                                .frame(maxWidth: .infinity)
+                                .multilineTextAlignment(.center)
+
+                            HStack(spacing: 12) {
+                                if context.state.isPaused {
+                                    Button(intent: ResumeTripRecordingIntent()) {
+                                        Label("继续", systemImage: "play.fill")
+                                            .font(.headline)
+                                            .frame(maxWidth: .infinity, minHeight: 38)
+                                    }
+                                    .buttonStyle(.borderedProminent)
+                                } else {
+                                    Button(intent: PauseTripRecordingIntent()) {
+                                        Label("暂停", systemImage: "pause.fill")
+                                            .font(.headline)
+                                            .frame(maxWidth: .infinity, minHeight: 38)
+                                    }
+                                    .buttonStyle(.bordered)
+                                }
                             }
-                            .buttonStyle(.bordered)
                         }
+                        .padding(.horizontal, 6)
+                        .frame(maxWidth: 340)
+                        Spacer(minLength: 0)
                     }
-                    .padding(.top, 4)
                 }
             } compactLeading: {
                 Image(systemName: context.state.isPaused ? "pause.circle.fill" : "location.fill")
@@ -71,6 +70,20 @@ struct TripRecordingLiveActivityWidget: Widget {
         }
     }
 
+}
+
+private func statPill(value: String, caption: String) -> some View {
+    VStack(alignment: .center, spacing: 2) {
+        Text(value)
+            .font(.title3.weight(.semibold))
+            .monospacedDigit()
+            .lineLimit(1)
+            .minimumScaleFactor(0.7)
+        Text(caption)
+            .font(.caption2)
+            .foregroundStyle(.secondary)
+    }
+    .frame(maxWidth: .infinity)
 }
 
 private enum TripRecordingLiveActivityFormatting {
@@ -107,58 +120,71 @@ private struct TripRecordingLockBannerView: View {
     let state: TripRecordingActivityAttributes.ContentState
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            HStack {
+        VStack(spacing: 12) {
+            HStack(alignment: .center) {
                 Text("MileMate")
                     .font(.caption.weight(.semibold))
                     .foregroundStyle(.secondary)
-                Spacer()
+                Spacer(minLength: 0)
                 if state.isPaused {
                     Text("已暂停")
                         .font(.caption.weight(.semibold))
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 5)
                         .background(.quaternary, in: Capsule())
                 }
             }
-            HStack(spacing: 16) {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(TripRecordingLiveActivityFormatting.distance(state.distanceMeters))
-                        .font(.headline)
-                        .monospacedDigit()
-                    Text("里程")
-                        .font(.caption2)
-                        .foregroundStyle(.secondary)
-                }
-                Spacer()
-                VStack(alignment: .trailing, spacing: 2) {
-                    Text(TripRecordingLiveActivityFormatting.duration(state.elapsedSeconds))
-                        .font(.headline)
-                        .monospacedDigit()
-                    Text("记录时长")
-                        .font(.caption2)
-                        .foregroundStyle(.secondary)
-                }
+
+            HStack(spacing: 14) {
+                lockStatPill(
+                    value: TripRecordingLiveActivityFormatting.distance(state.distanceMeters),
+                    caption: "里程"
+                )
+                lockStatPill(
+                    value: TripRecordingLiveActivityFormatting.duration(state.elapsedSeconds),
+                    caption: "记录时长"
+                )
             }
+
             Text("轨迹点 \(state.pointCount)")
                 .font(.caption2)
                 .foregroundStyle(.tertiary)
-            HStack(spacing: 10) {
+                .frame(maxWidth: .infinity)
+                .multilineTextAlignment(.center)
+
+            HStack(spacing: 12) {
                 if state.isPaused {
                     Button(intent: ResumeTripRecordingIntent()) {
                         Label("继续", systemImage: "play.fill")
-                            .frame(maxWidth: .infinity)
+                            .font(.headline)
+                            .frame(maxWidth: .infinity, minHeight: 36)
                     }
                     .buttonStyle(.borderedProminent)
                 } else {
                     Button(intent: PauseTripRecordingIntent()) {
                         Label("暂停", systemImage: "pause.fill")
-                            .frame(maxWidth: .infinity)
+                            .font(.headline)
+                            .frame(maxWidth: .infinity, minHeight: 36)
                     }
                     .buttonStyle(.bordered)
                 }
             }
         }
-        .padding(.horizontal, 4)
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
     }
+}
+
+private func lockStatPill(value: String, caption: String) -> some View {
+    VStack(spacing: 3) {
+        Text(value)
+            .font(.headline)
+            .monospacedDigit()
+            .lineLimit(1)
+            .minimumScaleFactor(0.75)
+        Text(caption)
+            .font(.caption2)
+            .foregroundStyle(.secondary)
+    }
+    .frame(maxWidth: .infinity)
 }

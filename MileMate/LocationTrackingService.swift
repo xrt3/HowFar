@@ -10,6 +10,7 @@ import MapKit
 import MileMateLiveActivityAttributes
 import SwiftData
 import SwiftUI
+import UIKit
 
 @MainActor
 final class LocationTrackingService: NSObject, ObservableObject {
@@ -34,6 +35,12 @@ final class LocationTrackingService: NSObject, ObservableObject {
     private var liveActivityHeartbeat: AnyCancellable?
     /// 非录制时用于省电的移动阈值（米）；录制中改为 `kCLDistanceFilterNone`，否则静止几秒可能收不到任何定位更新、行程无点。
     private static let idleDistanceFilter: CLLocationDistance = 5
+    /// 与 `MapScreenView` 底栏切换一致：优先 `smooth`（系统常用节奏）；「减少动态效果」时用短线性过渡。
+    private static var mapBottomChromeAnimation: Animation {
+        UIAccessibility.isReduceMotionEnabled
+            ? .linear(duration: 0.18)
+            : .smooth(duration: 0.32)
+    }
 
     override init() {
         authorizationStatus = manager.authorizationStatus
@@ -179,14 +186,16 @@ final class LocationTrackingService: NSObject, ObservableObject {
         modelContext.insert(trip)
         try modelContext.save()
         currentTrip = trip
-        isRecording = true
-        isRecordingPaused = false
-        activeTripStartedAt = trip.startedAt
-        routeCoordinates = []
-        totalDistanceMeters = 0
-        lastRecordedLocation = nil
+        withAnimation(Self.mapBottomChromeAnimation) {
+            isRecording = true
+            isRecordingPaused = false
+            activeTripStartedAt = trip.startedAt
+            routeCoordinates = []
+            totalDistanceMeters = 0
+            lastRecordedLocation = nil
+            mapPosition = .userLocation(fallback: .automatic)
+        }
         manager.distanceFilter = kCLDistanceFilterNone
-        mapPosition = .userLocation(fallback: .automatic)
         manager.startUpdatingLocation()
         Task {
             await TripLiveActivityCoordinator.beginIfPossible(tripId: trip.id, service: self)
@@ -210,12 +219,14 @@ final class LocationTrackingService: NSObject, ObservableObject {
         }
         trip.endedAt = Date()
         trip.totalDistanceMeters = totalDistanceMeters
-        currentTrip = nil
-        isRecording = false
-        isRecordingPaused = false
-        activeTripStartedAt = nil
-        lastRecordedLocation = nil
-        mapPosition = .userLocation(fallback: .automatic)
+        withAnimation(Self.mapBottomChromeAnimation) {
+            currentTrip = nil
+            isRecording = false
+            isRecordingPaused = false
+            activeTripStartedAt = nil
+            lastRecordedLocation = nil
+            mapPosition = .userLocation(fallback: .automatic)
+        }
         stopLiveActivityHeartbeat()
         try? modelContext.save()
         Task {
